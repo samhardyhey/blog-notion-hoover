@@ -1,4 +1,6 @@
+import json
 import os
+import secrets
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
@@ -6,18 +8,38 @@ from notion_client import Client
 
 load_dotenv()
 
-if __name__ == "__main__":
-    # Get the Notion API token
-    notion = Client(auth=os.environ["NOTION_API_KEY"])
+notion_client = Client(auth=os.environ["NOTION_API_KEY"])
+database_id = os.environ["NOTION_DB_ID"]
 
-    # Define the database ID and create a new page
-    database_id = os.environ["NOTION_DB_ID"]
-    new_page = {
-        "Name": {"title": [{"text": {"content": "test"}}]},
-        "URL": {"url": "test"},
-        "Date": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
-        "Type": {"select": {"name": "INSERT_PAGE_TYPE_HERE"}},
+
+def find_record_by_property(prop_name, prop_value):
+    if results := notion_client.databases.query(
+        **{
+            "database_id": database_id,
+            "filter": {
+                "property": prop_name,
+                "title": {"equals": prop_value},
+            },
+        }
+    ).get("results"):
+        return results[0]
+    else:
+        return None
+
+
+def format_notion_database_record(record):
+    notion_text_char_limit = 2000
+    meta = json.dumps(record["meta"]) if record["meta"] != {} else "None"
+    text = record["text"][:notion_text_char_limit]
+    return {
+        "id": {"title": [{"text": {"content": secrets.token_hex(4)}}]},
+        "text": {"rich_text": [{"text": {"content": text}}]},
+        # "text": {"text": [{"text": {"content": record['text']}}]},
+        "user": {"rich_text": [{"text": {"content": record["user"]}}]},
+        # "user": {"user": [{"text": {"content": record['user']}}]},
+        "url": {"url": record["url"]},
+        "date": {"date": {"start": record["date"]}},
+        "type": {"select": {"name": record["type"]}},
+        "source_system": {"select": {"name": record["source_system"]}},
+        "meta": {"rich_text": [{"text": {"content": meta}}]},
     }
-    created_page = notion.pages.create(
-        parent={"database_id": database_id}, properties=new_page
-    )
