@@ -1,7 +1,6 @@
 import json
 import os
 import secrets
-from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from notion_client import Client
@@ -34,11 +33,9 @@ def format_notion_database_record(record):
     return {
         "id": {"title": [{"text": {"content": secrets.token_hex(4)}}]},
         "text": {"rich_text": [{"text": {"content": text}}]},
-        # "text": {"text": [{"text": {"content": record['text']}}]},
         "user": {"rich_text": [{"text": {"content": record["user"]}}]},
-        # "user": {"user": [{"text": {"content": record['user']}}]},
         "url": {"url": record["url"]},
-        "date": {"date": {"start": record["date"]}},
+        "date_created": {"date": {"start": record["date_created"]}},
         "type": {"select": {"name": record["type"]}},
         "source_system": {"select": {"name": record["source_system"]}},
         "meta": {"rich_text": [{"text": {"content": meta}}]},

@@ -45,3 +45,5 @@ Getting these weird errors when I just use naive text:
 - linkedin posts
 - github libraries
 - pocket articles/summaries
+- filtering/modelling
+- reddit submission/post patchy data
