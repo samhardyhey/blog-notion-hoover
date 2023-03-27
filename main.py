@@ -1,38 +1,23 @@
-import logging
-from datetime import datetime
-
-import pandas as pd
-
+from ingest.github import get_starred_repos
 from ingest.notion import (
     database_id,
     find_record_by_property,
     format_notion_database_record,
     notion_client,
 )
-from ingest.reddit import get_saved_posts
-from ingest.twitter import get_liked_tweets
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-logger.addHandler(console_handler)
-
-start_date = datetime(2023, 3, 20)
-end_date = datetime(2023, 3, 27)
+from utils import logger
 
 if __name__ == "__main__":
     # 1. retrieve
-    reddit_posts = get_saved_posts(start_date=start_date, end_date=end_date)
-    twitter_posts = get_liked_tweets(start_date=start_date, end_date=end_date)
+    # reddit_posts = get_saved_posts()
+    # twitter_posts = get_liked_tweets()
+    github_repos = get_starred_repos()
     # TODO: linkedin?
 
     # 2. format
     # all_records = pd.concat([reddit_posts, twitter_posts]).to_dict(orient="records")
-    all_records = pd.concat([reddit_posts.head(), twitter_posts.head()]).to_dict(
-        orient="records"
-    )
+    all_records = github_repos.to_dict(orient="records")
+    # all_records = pd.concat([reddit_posts.head(), twitter_posts.head(), github_repos.head()]).to_dict(orient="records")
     logger.info(f"Found {len(all_records)} records to write to Notion")
 
     # 3. write

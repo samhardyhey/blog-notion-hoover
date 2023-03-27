@@ -5,6 +5,8 @@ import pandas as pd
 import praw
 from dotenv import load_dotenv
 
+from utils import logger
+
 load_dotenv()
 
 reddit_client = praw.Reddit(
@@ -14,7 +16,7 @@ reddit_client = praw.Reddit(
     password=os.environ["REDDIT_PASSWORD"],
     user_agent=os.environ["REDDIT_USER_AGENT"],
 )
-MAX_POSTS = 200  # no need to paginate
+MAX_POSTS = 200  # just below pagination limit
 
 
 def parse_post(post):
@@ -41,16 +43,14 @@ def parse_post(post):
     }
 
 
-def get_saved_posts(start_date=None, end_date=None, limit=MAX_POSTS):
+def get_saved_posts(limit=MAX_POSTS):
     # no way to filter posts based upon save date; only get creation date
-    if start_date is not None and end_date is not None and start_date > end_date:
-        raise ValueError("start_date cannot be later than end_date")
     posts = []
     user = reddit_client.redditor(os.environ["REDDIT_USERNAME"])
     saved = user.saved(limit=limit)
     for post in saved:
         datetime.utcfromtimestamp(post.created_utc)
-        # if start_date <= post_date <= end_date:
         parsed_post = parse_post(post)
         posts.append(parsed_post)
+    logger.info(f"Reddit: found {len(posts)} saved posts")
     return pd.DataFrame(posts).drop_duplicates(subset=["user", "text"])
