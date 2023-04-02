@@ -2,12 +2,10 @@ import contextlib
 import os
 import re
 import time
-from datetime import datetime
 
 import pandas as pd
 import pyperclip
 from dotenv import load_dotenv
-from linkedin_api import Linkedin
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchWindowException
 from selenium.webdriver.common.action_chains import ActionChains
@@ -44,7 +42,9 @@ def get_post_url(update_container):
     for _ in range(N_URL_ATTEMPTS):
         try:
             # find elipses next to post, click
-            button = update_container.find_elements(By.CLASS_NAME, "feed-shared-control-menu__trigger")[0]
+            button = update_container.find_elements(
+                By.CLASS_NAME, "feed-shared-control-menu__trigger"
+            )[0]
             button.click()
 
             # wait for the elements to become available (save, copy link, report)
@@ -54,7 +54,9 @@ def get_post_url(update_container):
             # wait for the elements to become available (save, copy link, report)
             wait = WebDriverWait(DRIVER, N_WAIT_TIME * 1)
             elements = wait.until(
-                EC.visibility_of_all_elements_located((By.CLASS_NAME, "feed-shared-control-menu__item"))
+                EC.visibility_of_all_elements_located(
+                    (By.CLASS_NAME, "feed-shared-control-menu__item")
+                )
             )
 
             # click the "save to clipboard"
@@ -62,7 +64,9 @@ def get_post_url(update_container):
 
             # simulate Ctrl+C keyboard shortcut to copy the link to the clipboard
             action_chains = ActionChains(DRIVER)
-            action_chains.key_down(Keys.CONTROL).send_keys("c").key_up(Keys.CONTROL).perform()
+            action_chains.key_down(Keys.CONTROL).send_keys("c").key_up(
+                Keys.CONTROL
+            ).perform()
 
             link = pyperclip.paste()
             links.append(link)
@@ -76,7 +80,9 @@ def get_post_url(update_container):
 
 
 def get_post_description(container):
-    show_more_text = container.find_elements(By.CLASS_NAME, "feed-shared-inline-show-more-text")
+    show_more_text = container.find_elements(
+        By.CLASS_NAME, "feed-shared-inline-show-more-text"
+    )
     return " ".join([e.text for e in show_more_text])
 
 
@@ -97,8 +103,12 @@ def extract_author_from_url(url):
 
 def get_post_author(container):
     # container > "update-components-actor"
-    update_components_actor = container.find_elements(By.CLASS_NAME, "update-components-actor")
-    links = update_components_actor[0].find_elements(By.CLASS_NAME, "app-aware-link")  # TODO: brittle indexing
+    update_components_actor = container.find_elements(
+        By.CLASS_NAME, "update-components-actor"
+    )
+    links = update_components_actor[0].find_elements(
+        By.CLASS_NAME, "app-aware-link"
+    )  # TODO: brittle indexing
     return extract_author_from_url(links[0].get_attribute("href"))
 
 
@@ -137,8 +147,12 @@ def get_liked_posts():
 
     # get/filter update containers
     logger.info("Retrieving update containers..")
-    update_containers = DRIVER.find_elements(By.CLASS_NAME, "profile-creator-shared-feed-update__container")
-    update_containers = [e for e in update_containers if len(get_post_description(e)) > 2]
+    update_containers = DRIVER.find_elements(
+        By.CLASS_NAME, "profile-creator-shared-feed-update__container"
+    )
+    update_containers = [
+        e for e in update_containers if len(get_post_description(e)) > 2
+    ]
 
     posts = []
     logger.info("Parsing update containers..")
