@@ -1,0 +1,8 @@
+linkedin_api==1.1.0
+notion_client==2.0.0
+pandas==1.5.2
+praw==7.7.0
+python-dotenv==1.0.0
+python_dateutil==2.8.2
+requests==2.28.2
+tweepy==4.13.0

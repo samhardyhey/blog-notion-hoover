@@ -36,6 +36,11 @@ Getting these weird errors when I just use naive text:
 - format as "rich_text" instead?
     "text": {"rich_text": [{"text": {"content": record['text']}}]},
 
+## Linkedin
+- linkedin_api > handles auth, session, fetching
+- voyager API > locate to page (reations) > source > search for specific data structure > pipe back into voyager API
+- nothing in these requests :( > nothing to do with reacts
+
 ## Classification?
 - ML/not ML
 - topic/usefulness
