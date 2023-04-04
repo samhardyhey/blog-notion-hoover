@@ -28,7 +28,7 @@ def find_record_by_property(prop_name, prop_value):
 
 
 def format_notion_database_record(record):
-    notion_text_char_limit = 2000
+    notion_text_char_limit = 1800  # slightly less than 2000
     meta = json.dumps(record["meta"]) if record["meta"] != {} else "None"
     text = record["text"][:notion_text_char_limit]
     date_created = (

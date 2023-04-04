@@ -1,3 +1,7 @@
+## Use-case
+- stay on top of upcoming ML, sourced from a variety of places (linkedin, reddit etc.)
+- tried a Zapier integration initially > no support for linkedin
+
 ## Linkedin
 - not currently supported in official API
 - not currently supported with linkedin API
@@ -40,6 +44,17 @@ Getting these weird errors when I just use naive text:
 - linkedin_api > handles auth, session, fetching
 - voyager API > locate to page (reations) > source > search for specific data structure > pipe back into voyager API
 - nothing in these requests :( > nothing to do with reacts
+
+## Selenium
+- functional code with headfull browser
+- clunky, issues when trying to run headless
+- try playwright instead? a little more modern, less imperative
+
+## Playwright
+- `playwright install` install browsers
+- generally much faster > using native chrome instead of selenium chrome?
+- using chromium instead
+- still having problems running headless.. hard to debug as well?
 
 ## Classification?
 - ML/not ML

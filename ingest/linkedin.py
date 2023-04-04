@@ -1,40 +1,29 @@
-import contextlib
 import os
 import re
 import time
+from datetime import datetime, timezone
+from urllib import parse
 
 import pandas as pd
 import pyperclip
 from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchWindowException
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
+from playwright.sync_api import TimeoutError, sync_playwright
 
 from utils import logger
 
 N_URL_ATTEMPTS = 2
 N_WAIT_TIME = 5
+HEADLESS = False
 
 load_dotenv()
 
-# linkedin_client = Linkedin(
-#     os.environ["LINKEDIN_EMAIL"],
-#     os.environ["LINKEDIN_PASSWORD"],
-#     refresh_cookies=True,
-# )
 
-# check if the ChromeDriver executable already exists
-if os.path.exists(ChromeDriverManager().install()):
-    # if it exists, use it to create the driver instance
-    DRIVER = webdriver.Chrome()
-else:
-    # if it does not exist, download it and use it to create the driver instance
-    DRIVER = webdriver.Chrome(ChromeDriverManager().install())
+def is_valid_url(url):
+    try:
+        result = parse.urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
 
 
 def get_post_url(update_container):
@@ -42,48 +31,36 @@ def get_post_url(update_container):
     for _ in range(N_URL_ATTEMPTS):
         try:
             # find elipses next to post, click
-            button = update_container.find_elements(
-                By.CLASS_NAME, "feed-shared-control-menu__trigger"
-            )[0]
+            button = update_container.wait_for_selector(
+                ".feed-shared-control-menu__trigger"
+            )
             button.click()
 
             # wait for the elements to become available (save, copy link, report)
-            # time.sleep(N_WAIT_TIME * 1.5)
-            # elements = DRIVER.find_elements(By.CLASS_NAME, "feed-shared-control-menu__item")
-
-            # wait for the elements to become available (save, copy link, report)
-            wait = WebDriverWait(DRIVER, N_WAIT_TIME * 1)
-            elements = wait.until(
-                EC.visibility_of_all_elements_located(
-                    (By.CLASS_NAME, "feed-shared-control-menu__item")
-                )
+            copy_url = update_container.wait_for_selector(
+                ".feed-shared-control-menu__item:nth-child(2)"
             )
+            copy_url.click()
 
-            # click the "save to clipboard"
-            elements[1].click()  # TODO: more robust filtering
-
-            # simulate Ctrl+C keyboard shortcut to copy the link to the clipboard
-            action_chains = ActionChains(DRIVER)
-            action_chains.key_down(Keys.CONTROL).send_keys("c").key_up(
-                Keys.CONTROL
-            ).perform()
-
+            # paste/check the link
             link = pyperclip.paste()
             links.append(link)
-        except Exception:
+            if is_valid_url(link):
+                break
+
+        except TimeoutError:
             continue
 
     if links := list(set(links)):
         return link if len(links) == 1 else links[0]
-    else:
-        return None
+
+    logger.warning(f"Unable to find valid URL for post: {update_container.id}")
+    return None
 
 
 def get_post_description(container):
-    show_more_text = container.find_elements(
-        By.CLASS_NAME, "feed-shared-inline-show-more-text"
-    )
-    return " ".join([e.text for e in show_more_text])
+    show_more_text = container.query_selector_all(".feed-shared-inline-show-more-text")
+    return " ".join([e.text_content().strip() for e in show_more_text]).strip()
 
 
 def extract_author_from_url(url):
@@ -103,64 +80,79 @@ def extract_author_from_url(url):
 
 def get_post_author(container):
     # container > "update-components-actor"
-    update_components_actor = container.find_elements(
-        By.CLASS_NAME, "update-components-actor"
-    )
-    links = update_components_actor[0].find_elements(
-        By.CLASS_NAME, "app-aware-link"
+    update_components_actor = container.query_selector(".update-components-actor")
+    links = update_components_actor.query_selector_all(
+        ".app-aware-link"
     )  # TODO: brittle indexing
     return extract_author_from_url(links[0].get_attribute("href"))
 
 
 def parse_post(update_container):
-    # TODO: date created, meta: external links
+    # TODO: meta: external links
     if text := get_post_description(update_container):
         return {
             "user": get_post_author(update_container),
             "url": get_post_url(update_container),
+            "date_created": datetime.now(timezone.utc).strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
+            ),
+            "type": "post",  # TODO: post taxonomy?
+            "source_system": "linkedin",
             "text": get_post_description(update_container),
+            "meta": {},
         }
     else:
         raise ValueError("No text found in post")
 
 
 def get_liked_posts():
-    # login
-    logger.info("Logging into linkedin..")
-    DRIVER.get("https://www.linkedin.com/login")
-    username = DRIVER.find_element(By.ID, "username")
-    password = DRIVER.find_element(By.ID, "password")
-    username.send_keys(os.environ["LINKEDIN_EMAIL"])
-    password.send_keys(os.environ["LINKEDIN_PASSWORD"])
-    password.send_keys(Keys.RETURN)
-    time.sleep(N_WAIT_TIME * 1.5)
+    # Start Playwright with a headless Chromium browser
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=HEADLESS)
+        page = browser.new_page()
 
-    # locate to reaction posts
-    logger.info("Locating to reaction page..")
-    DRIVER.get("https://www.linkedin.com/in/samhardyhey/recent-activity/reactions/")
+        # Login to LinkedIn
+        logger.info("Logging into LinkedIn..")
+        page.goto("https://www.linkedin.com/login")
+        page.fill("#username", os.environ["LINKEDIN_EMAIL"])
+        page.fill("#password", os.environ["LINKEDIN_PASSWORD"])
+        page.press("#password", "Enter")
+        page.wait_for_selector("input.search-global-typeahead__input")
 
-    # refresh the page
-    DRIVER.refresh()
-    time.sleep(N_WAIT_TIME * 1.5)
+        # Go to reaction posts
+        logger.info("Navigating to reaction page..")
+        page.goto("https://www.linkedin.com/in/samhardyhey/recent-activity/reactions/")
 
-    # TODO: scroll a little > min 20 update containers?
+        # Prevent against weird page failures?
+        page.reload()
 
-    # get/filter update containers
-    logger.info("Retrieving update containers..")
-    update_containers = DRIVER.find_elements(
-        By.CLASS_NAME, "profile-creator-shared-feed-update__container"
-    )
-    update_containers = [
-        e for e in update_containers if len(get_post_description(e)) > 2
-    ]
+        # Scroll down a bit to load more posts
+        page.evaluate("window.scrollBy(0, 10000)")
+        time.sleep(N_WAIT_TIME)
 
-    posts = []
-    logger.info("Parsing update containers..")
-    for update_container in update_containers:
-        parsed_post = parse_post(update_container)
-        posts.append(parsed_post)
-    logger.info(f"Linkedin: found {len(posts)} saved posts")
+        # Wait for any DM dialog to appear, then close it
+        button_selector = "button.msg-overlay-bubble-header__control"
+        button_elements = page.query_selector_all(button_selector)
+        dm_button = button_elements[1]
+        dm_button.click()
 
-    with contextlib.suppress(NoSuchWindowException):
-        DRIVER.quit()
+        # Get the update containers for each liked post
+        logger.info("Retrieving update containers..")
+        update_containers = page.query_selector_all(
+            ".profile-creator-shared-feed-update__container"
+        )
+        update_containers = [c for c in update_containers if len(c.text_content()) > 2]
+
+        # Parse each post and collect the results
+        posts = []
+        logger.info("Parsing update containers..")
+        for update_container in update_containers:
+            parsed_post = parse_post(update_container)
+            posts.append(parsed_post)
+        logger.info(f"LinkedIn: found {len(posts)} saved posts")
+
+        # Clean up the browser
+        browser.close()
+
+    # Return the parsed posts as a Pandas DataFrame
     return pd.DataFrame(posts).drop_duplicates(subset=["user", "text"])
