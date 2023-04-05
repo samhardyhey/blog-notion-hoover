@@ -6,13 +6,11 @@ import pandas as pd
 import requests
 from dateutil import parser
 from dotenv import load_dotenv
-
 from utils import logger
 
 load_dotenv()
 MAX_REPOS = 10
-
-# MAX_REPOS = 25
+MAX_README_LINES = 10
 
 
 def get_readme_sample(repo_url):
@@ -27,13 +25,12 @@ def get_readme_sample(repo_url):
     headers = {"Accept": "application/vnd.github.v3+json"}
     response = requests.get(api_url, headers=headers)
 
-    # Decode the base64 encoded content of the README file and print it to the console
+    # Decode the base64 encoded content of the README file
     if response.status_code == 200:
         readme_content = response.json().get("content")
         readme_text = base64.b64decode(readme_content).decode("utf-8")
         lines = readme_text.split("\n")
-        sample = round(len(lines) / 2)
-        return "\n".join(lines[:sample])
+        return "\n".join(lines[:MAX_README_LINES])
     else:
         logger.error(f"Error {response.status_code}: {response.reason}")
         return None
@@ -64,9 +61,7 @@ def get_starred_repos(limit=MAX_REPOS):
         "Authorization": f'Bearer {os.environ["GITHUB_TOKEN"]}',
     }
     params = {"per_page": limit}
-    response = requests.get(
-        "https://api.github.com/user/starred", headers=headers, params=params
-    )
+    response = requests.get("https://api.github.com/user/starred", headers=headers, params=params)
 
     if response.status_code == 200:
         starred_repos = response.json()

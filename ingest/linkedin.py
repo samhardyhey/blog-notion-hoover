@@ -8,7 +8,6 @@ import pandas as pd
 import pyperclip
 from dotenv import load_dotenv
 from playwright.sync_api import TimeoutError, sync_playwright
-
 from utils import logger
 
 N_URL_ATTEMPTS = 2
@@ -26,20 +25,30 @@ def is_valid_url(url):
         return False
 
 
+# X11 server alternative?
+# import pyperclip
+# import socket
+
+# # Connect to the X11 display using the host's IP address and the display number
+# host_ip = socket.gethostbyname(socket.gethostname())
+# display = pyperclip._executable().split(":")[-1].split(".")[0]
+# x11_display = f"{host_ip}:{display}"
+# pyperclip.set_clipboard("x11", x11_display)
+
+# # Now you can use pyperclip normally to access the clipboard
+# text = pyperclip.paste()
+
+
 def get_post_url(update_container):
     links = []
     for _ in range(N_URL_ATTEMPTS):
         try:
             # find elipses next to post, click
-            button = update_container.wait_for_selector(
-                ".feed-shared-control-menu__trigger"
-            )
+            button = update_container.wait_for_selector(".feed-shared-control-menu__trigger")
             button.click()
 
             # wait for the elements to become available (save, copy link, report)
-            copy_url = update_container.wait_for_selector(
-                ".feed-shared-control-menu__item:nth-child(2)"
-            )
+            copy_url = update_container.wait_for_selector(".feed-shared-control-menu__item:nth-child(2)")
             copy_url.click()
 
             # paste/check the link
@@ -81,28 +90,23 @@ def extract_author_from_url(url):
 def get_post_author(container):
     # container > "update-components-actor"
     update_components_actor = container.query_selector(".update-components-actor")
-    links = update_components_actor.query_selector_all(
-        ".app-aware-link"
-    )  # TODO: brittle indexing
+    links = update_components_actor.query_selector_all(".app-aware-link")  # TODO: brittle indexing
     return extract_author_from_url(links[0].get_attribute("href"))
 
 
 def parse_post(update_container):
-    # TODO: meta: external links
     if text := get_post_description(update_container):
         return {
             "user": get_post_author(update_container),
             "url": get_post_url(update_container),
-            "date_created": datetime.now(timezone.utc).strftime(
-                "%Y-%m-%dT%H:%M:%S.%fZ"
-            ),
+            "date_created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "type": "post",  # TODO: post taxonomy?
             "source_system": "linkedin",
             "text": get_post_description(update_container),
             "meta": {},
         }
-    else:
-        raise ValueError("No text found in post")
+    logger.warning("Unable to retrieve text for post")
+    return None
 
 
 def get_liked_posts():
@@ -138,9 +142,7 @@ def get_liked_posts():
 
         # Get the update containers for each liked post
         logger.info("Retrieving update containers..")
-        update_containers = page.query_selector_all(
-            ".profile-creator-shared-feed-update__container"
-        )
+        update_containers = page.query_selector_all(".profile-creator-shared-feed-update__container")
         update_containers = [c for c in update_containers if len(c.text_content()) > 2]
 
         # Parse each post and collect the results
@@ -155,4 +157,5 @@ def get_liked_posts():
         browser.close()
 
     # Return the parsed posts as a Pandas DataFrame
+    posts = [e for e in posts if e]  # filter None
     return pd.DataFrame(posts).drop_duplicates(subset=["user", "text"])

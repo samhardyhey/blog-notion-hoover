@@ -4,7 +4,6 @@ from datetime import datetime
 import pandas as pd
 import praw
 from dotenv import load_dotenv
-
 from utils import logger
 
 load_dotenv()
@@ -33,9 +32,7 @@ def parse_post(post):
     return {
         "user": post_dict.get("author").__str__(),
         "url": post_dict.get("url"),
-        "date_created": datetime.utcfromtimestamp(
-            post_dict.get("created_utc")
-        ).isoformat(),
+        "date_created": datetime.utcfromtimestamp(post_dict.get("created_utc")).isoformat(),
         "type": post_type,
         "source_system": "reddit",
         "text": combined_text,
