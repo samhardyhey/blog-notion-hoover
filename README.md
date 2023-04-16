@@ -14,14 +14,12 @@
 - specifically format input > rich text?
 
 ## Linkedin
-- not currently supported in official API
-- not currently supported with linkedin API
-- scrape?
-
-### linkedin API
-- linkedin_api > handles auth, session, fetching
-- voyager API > locate to page (reations) > source > search for specific data structure > pipe back into voyager API
-- nothing in these requests :( > nothing to do with reacts
+- post retrieval not currently supported in official API
+- reviewed linkedin_api > handles auth, session, fetching
+- under the hood, linkedin_api uses voyager API, linkedin's official, internal API > locate to page (reations) > source > search for specific data structure > pipe back into voyager API
+- linkedin_api allows you to retrieve/query against novel voyager resources
+- So I inspected the react page elements, but couldn't find any voyager resources to do with reacts :(
+- at this point, started to consider scraping
 
 ### Selenium
 - functional code with headfull browser
@@ -30,11 +28,10 @@
 
 ### Playwright
 - `playwright install` install browsers
-- generally much faster > using native chrome instead of selenium chrome?
-- using chromium instead
+- generally much faster > using chromium instead of selenium chrome?
 - still having problems running headless.. hard to debug as well?
 
-## Creating sink
+## Storing posts
 - store data within a notion database > where I do most of my planning etc.
 - had to search for the database ID manually:
 https://developers.notion.com/reference/post-search
@@ -81,9 +78,9 @@ Getting these weird errors when I just use naive text:
   ### Playwright
   - install chromium extensions, as well as an x-server to render the browser
   - tweak run command `xvfb-run -a python main.py`
-  
+
   ### Pyperclip
-  - relies on the host system clipboard, which is not present within 
+  - relies on the host system clipboard, which is not present within
 
 ## TODO:
 - filtering/modelling

@@ -1,0 +1,1 @@
+docker run -it --rm --name notion-hoover -v /Users/samhardyhey/Desktop/blog/blog-notion-hoover:/app notion-hoover /bin/bash

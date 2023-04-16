@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     # 2. format
     # all_records = pd.concat([reddit_posts, twitter_posts]).to_dict(orient="records")
-    all_records = linkedin_posts.to_dict(orient="records")
+    all_records = linkedin_posts.to_dict(orient="records")[:5]
     # all_records = pd.concat([reddit_posts.head(), twitter_posts.head(), github_repos.head()]).to_dict(orient="records")
     logger.info(f"Found {len(all_records)} records to write to Notion")
 
