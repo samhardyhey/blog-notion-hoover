@@ -45,4 +45,5 @@ def format_notion_database_record(record):
         "type": {"select": {"name": record["type"]}},
         "source_system": {"select": {"name": record["source_system"]}},
         "meta": {"rich_text": [{"text": {"content": meta}}]},
+        "is_ml_related": {"select": {"name": record["is_ml_related"]}},
     }

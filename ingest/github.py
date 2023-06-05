@@ -6,6 +6,7 @@ import pandas as pd
 import requests
 from dateutil import parser
 from dotenv import load_dotenv
+
 from utils import logger
 
 load_dotenv()
@@ -61,7 +62,9 @@ def get_starred_repos(limit=MAX_REPOS):
         "Authorization": f'Bearer {os.environ["GITHUB_TOKEN"]}',
     }
     params = {"per_page": limit}
-    response = requests.get("https://api.github.com/user/starred", headers=headers, params=params)
+    response = requests.get(
+        "https://api.github.com/user/starred", headers=headers, params=params
+    )
 
     if response.status_code == 200:
         starred_repos = response.json()
