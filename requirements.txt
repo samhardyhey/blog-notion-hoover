@@ -8,3 +8,5 @@ tweepy==4.13.0
 playwright==1.32.1
 pyperclip==1.8.2
 clean-py==0.5
+langchain==0.0.157
+openai==0.27.6
