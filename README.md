@@ -95,3 +95,7 @@ docker build . -t notion-hoover
 docker-compose up -d
 
 This will run the latest quickstart docker image with 2 users `admin` and `argilla`. The password for these users is `1234`. You can also configure these environment variables as per your needs.
+
+## Evaluation
+- edge cases for Non-Tech: Math, Career-related advice (programming, non-programming)
+- Tech: damn near perfect
