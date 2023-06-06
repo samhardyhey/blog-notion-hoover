@@ -29,10 +29,11 @@ def parse_post(post):
     body = post_dict.get("selftext") or post_dict.get("body")
     body = body or ""
     combined_text = f"{title} {body}".strip()
+    url = post_dict.get("url") or post_dict.get("link_permalink")
 
     return {
         "user": post_dict.get("author").__str__(),
-        "url": post_dict.get("url"),
+        "url": url,
         "date_created": datetime.utcfromtimestamp(
             post_dict.get("created_utc")
         ).isoformat(),

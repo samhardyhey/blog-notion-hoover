@@ -8,10 +8,10 @@ from langchain.prompts.prompt import PromptTemplate
 
 load_dotenv()
 
-_PROMPT_TEMPLATE = """You are an expert professor specialized in emerging machine learning technologies.
+_PROMPT_TEMPLATE = """You are subject matter expert specializing in computer science, programming and machine learning technologies.
 You are to classify whether the following text:
 {text}
-Is likely to relate to machine learning or not. Please provide one of two answers: is_ml_related, is_not_ml_related.
+Is likely to relate to computer science, programming or machine learning or not. Please provide one of two answers: tech, not_tech.
 """
 
 prompt = PromptTemplate(input_variables=["text"], template=_PROMPT_TEMPLATE)

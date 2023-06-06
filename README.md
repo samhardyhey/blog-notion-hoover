@@ -90,3 +90,8 @@ Getting these weird errors when I just use naive text:
 
 ## Docker misc
 docker build . -t notion-hoover
+
+## Argila
+docker-compose up -d
+
+This will run the latest quickstart docker image with 2 users `admin` and `argilla`. The password for these users is `1234`. You can also configure these environment variables as per your needs.

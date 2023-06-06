@@ -10,3 +10,4 @@ pyperclip==1.8.2
 clean-py==0.5
 langchain==0.0.157
 openai==0.27.6
+argilla==1.5.1
