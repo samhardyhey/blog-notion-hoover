@@ -1,11 +1,11 @@
 import json
 import os
 import secrets
+import time
 
 import pandas as pd
 from dotenv import load_dotenv
 from notion_client import Client
-import time
 
 load_dotenv()
 
@@ -49,6 +49,7 @@ def format_notion_database_record(record):
         "is_tech_related": {"select": {"name": record["is_tech_related"]}},
     }
 
+
 def notion_db_to_df(notion_client, database_id):
     # Create an empty list to hold all pages
     data = []
@@ -70,7 +71,7 @@ def notion_db_to_df(notion_client, database_id):
             }
             data.append(record)
 
-        if next_cursor := response.get('next_cursor'):
+        if next_cursor := response.get("next_cursor"):
             # Otherwise, set 'start_cursor' to 'next_cursor' to get the next page of results in the next iteration
             start_cursor = next_cursor
 
@@ -79,7 +80,6 @@ def notion_db_to_df(notion_client, database_id):
 
     # Convert the data to a dataframe and return it
     return pd.DataFrame(data)
-
 
 
 def get_property_value(page, property_name):
