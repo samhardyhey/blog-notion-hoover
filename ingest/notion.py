@@ -6,26 +6,26 @@ import time
 import pandas as pd
 from dotenv import load_dotenv
 from notion_client import Client
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 load_dotenv()
 
 notion_client = Client(auth=os.environ["NOTION_API_KEY"])
 database_id = os.environ["NOTION_DB_ID"]
 
+NOTION_MAX_RETRY = 6
+NOTION_MAX_RETRY_TIME = 120
 
-def find_record_by_property(prop_name, prop_value):
-    if results := notion_client.databases.query(
-        **{
-            "database_id": database_id,
-            "filter": {
-                "property": prop_name,
-                "title": {"equals": prop_value},
-            },
-        }
-    ).get("results"):
-        return results[0]
-    else:
-        return None
+
+@retry(
+    wait=wait_random_exponential(min=1, max=NOTION_MAX_RETRY_TIME),
+    stop=stop_after_attempt(NOTION_MAX_RETRY),
+)
+def write_notion_page(new_database_record, database_id):
+    res = notion_client.pages.create(
+        parent={"database_id": database_id},
+        properties=new_database_record,
+    )
 
 
 def format_notion_database_record(record):
@@ -50,6 +50,10 @@ def format_notion_database_record(record):
     }
 
 
+@retry(
+    wait=wait_random_exponential(min=1, max=NOTION_MAX_RETRY_TIME),
+    stop=stop_after_attempt(NOTION_MAX_RETRY),
+)
 def notion_db_to_df(notion_client, database_id):
     # Create an empty list to hold all pages
     data = []
