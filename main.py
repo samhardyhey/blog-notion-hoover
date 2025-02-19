@@ -3,6 +3,7 @@ import time
 import pandas as pd
 
 from ingest.github import get_starred_repos
+from ingest.linkedin import get_liked_posts
 from ingest.llm import chain
 from ingest.notion import (
     database_id,
@@ -13,7 +14,6 @@ from ingest.notion import (
 )
 from ingest.reddit import get_saved_posts
 from ingest.twitter import get_liked_tweets
-from ingest.linkedin import get_liked_posts
 from utils import logger
 
 API_THROTTLE = 1
@@ -28,9 +28,9 @@ if __name__ == "__main__":
     linkedin_posts = get_liked_posts()
 
     # 2. format
-    all_records = pd.concat([reddit_posts, twitter_posts, github_repos, linkedin_posts]).to_dict(
-        orient="records"
-    )
+    all_records = pd.concat(
+        [reddit_posts, twitter_posts, github_repos, linkedin_posts]
+    ).to_dict(orient="records")
     logger.info(f"Found {len(all_records)} records to write to Notion")
 
     # 3. write

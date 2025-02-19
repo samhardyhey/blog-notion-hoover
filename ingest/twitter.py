@@ -37,3 +37,7 @@ def get_liked_tweets(limit=MAX_TWEETS):
     tweets = list(parsed_tweets)
     logger.info(f"Twitter: found {len(tweets)} saved tweets")
     return pd.DataFrame(tweets).drop_duplicates(subset=["user", "text"])
+
+
+if __name__ == "__main__":
+    get_liked_tweets()

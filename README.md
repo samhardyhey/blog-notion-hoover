@@ -1,18 +1,39 @@
-## Blog Notion Hoover
-Notebooks and scripts for the:
+# Notion Hoover 🧹
 
-- Conversion/parsing of nautilus epub issues
-- TTS sampling
-- Bulk TTS conversion using a Coqui VKTS multi-speaker model (speaker randomly selected)
+Tools for ingesting and classifying bookmarked content from social platforms into Notion. Companion code for ["Notion Hoover"](https://www.samhardyhey.com/notion-hoover).
 
-See the accompanying blog post [here](https://www.samhardyhey.com/behold-the-humble-nautilus).
+## Features
+- 📥 Social media content ingestion
+- 🏷️ Automated content classification
+- 📊 Argilla-based evaluation
+- 📝 Notion integration
 
-## Install
-- For epub conversion/parsing and TTS, create env via `scripts/create_env.sh`
+## Platforms
+- 🐦 Twitter
+- 📱 Reddit
+- 💻 GitHub
+- 👥 LinkedIn
+
+## Setup
+```bash
+# Install dependencies
+pip install -r requirements.txt
+```
 
 ## Usage
-- **Parsing/conversion.** Via `python transform/ebook.py`
-- **TTS transforms.** Via `python transform/tts.py`
-- **Streaming API.** Via `docker-compose up --build -d`
+```bash
+# Run content ingestion
+python main.py
 
-All code obviously dependant upon Nautilus issues, S3 bucket access, some decent hardware to run the TTS conversions.
+# Start Argilla evaluation
+cd evaluate
+docker-compose up -d
+python evaluate.py
+```
+
+## Structure
+- 🔄 `main.py` # Content ingestion
+- 📊 `evaluate/` # Classification evaluation
+- ⚙️ `requirements.txt` # Dependencies
+
+*Note: Requires platform-specific API credentials.*
